@@ -1,7 +1,6 @@
 package com.daniele.project.restmoneytx.service;
 
 import java.util.List;
-
 import com.daniele.project.restmoneytx.exception.AccountMovementException;
 import com.daniele.project.restmoneytx.model.BankAccount;
 import com.daniele.project.restmoneytx.model.MoneyTransfer;
@@ -19,11 +18,8 @@ public interface AccountManagerService {
 	
 	TransferOutcome transfer(MoneyTransfer transfer) throws AccountMovementException;
 
-//	List<BankAccount> getBankAccounts() throws Exception;
+	void removeByAcctNum(long AcctNum) throws Exception;
 	
-//	Long getMaxId() throws Exception;
-
-//	void save(BankAccountDAO account) throws Exception;  
-	
+	long removeAll() throws Exception;  
 	
 }

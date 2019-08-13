@@ -4,9 +4,11 @@ import static com.daniele.project.restmoneytx.mapper.TransferMapper.mapToDAO;
 import static com.daniele.project.restmoneytx.mapper.TransferMapper.mapToResponse;
 
 import java.util.List;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -17,6 +19,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,25 +28,15 @@ import com.daniele.project.restmoneytx.model.BankAccountCreation;
 import com.daniele.project.restmoneytx.model.MoneyTransfer;
 import com.daniele.project.restmoneytx.model.TransferOutcome;
 import com.daniele.project.restmoneytx.service.AccountManagerService;
-import com.daniele.project.restmoneytx.service.AccountManagerServiceImpl;
 
 /**
  * Root resource (exposed at "bankAccounts" path)
  */
 @RequestScoped
 @Path("bankAccounts")
-public class MyResource {
+public class BankAccountsResource {
 	
-	private static final Logger logger = LoggerFactory.getLogger(MyResource.class);
-
-//	@PersistenceContext(unitName = "test")
-//    private EntityManager em;	
-//	private EntityManagerFactory entityManagerFactory = Persistence
-//													.createEntityManagerFactory("test");;
-//    private EntityManager entityManager= entityManagerFactory.createEntityManager();
-
-	 
-//	AccountManager manager = new AccountManagerImpl(entityManager);//TODO to be moved 
+	private static final Logger logger = LoggerFactory.getLogger(BankAccountsResource.class);
 
 	@Inject
 	AccountManagerService service;
@@ -126,5 +119,24 @@ public class MyResource {
 			      .entity(result)
 			      .build();
 	}
+	
+	@DELETE
+	@Path( value = "/{acctNum}")	
+	public Response remove(@PathParam("acctNum") String acctNum) throws Exception{
+		service.removeByAcctNum(Long.parseLong(acctNum));
+		return Response.status(Response.Status.OK)
+			      .build();
+	}
+	
+	@DELETE
+	@Path( value = "")	
+    @Produces(MediaType.TEXT_PLAIN)
+	public Response removeAll() throws Exception{
+		Long deletions = service.removeAll();
+		return Response.status(Response.Status.OK)
+				  .entity(deletions)
+			      .build();
+	}
+	
 	
 }

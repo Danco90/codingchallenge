@@ -23,14 +23,11 @@ public class TransferMapper {
 	}
 	
 	private static AccountConversionBean mapToAccountConversionBean(BankAccount in) {
-		
 		AccountConversionBean out = new AccountConversionBean();
 		out.setOwnerName(in.getOwnerName());
 		out.setAcctNumber(in.getAcctNumber());
 		out.setBalance(in.getBalance());
-		
 		return out;
-		
 	}
 	
 	public static BankAccountCreation mapToResponse(BankAccount input) {
