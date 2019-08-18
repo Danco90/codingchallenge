@@ -1,9 +1,5 @@
 package com.daniele.project.restmoneytx.model;
 
-//import com.fasterxml.jackson.annotation.JsonInclude;
-//import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-//@JsonInclude(Include.NON_EMPTY)
 public class BankAccountCreation {
 	
 	private long id;
@@ -51,4 +47,16 @@ public class BankAccountCreation {
 		this.balance = balance;
 	}
 	
+	@Override 
+	public boolean equals(Object obj) {
+		if (obj == this) { return true; } 
+		if (obj == null || obj.getClass() != this.getClass()) 
+		{ return false; } 
+		BankAccountCreation guest = (BankAccountCreation) obj; 
+		return id == guest.id && 
+		   (name != null && name.equals(guest.getName())) && 
+		   number == guest.number && 
+		   balance == guest.balance;  
+	}
+
 }

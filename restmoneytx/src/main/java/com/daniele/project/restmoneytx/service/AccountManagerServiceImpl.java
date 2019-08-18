@@ -12,8 +12,7 @@ import javax.persistence.Persistence;
 import javax.persistence.PersistenceUnit;
 import javax.persistence.TypedQuery;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import com.daniele.project.restmoneytx.exception.AccountMovementException;
 import com.daniele.project.restmoneytx.model.BankAccount;
@@ -23,46 +22,41 @@ import com.daniele.project.restmoneytx.model.TransferOutcome;
 @Stateless
 public class AccountManagerServiceImpl implements AccountManagerService {
 	
-	private static final Logger logger = LoggerFactory.getLogger(AccountManagerServiceImpl.class);
-
-//    @PersistenceContext(unitName = "restapi_PU")
-    EntityManager em;
+	private static org.apache.log4j.Logger logger 
+    = Logger.getLogger(AccountManagerServiceImpl.class);
 	
-	@PersistenceUnit(name="restapi_PU")
+	@PersistenceUnit(name="restapi_PU")// 'RESOURCE_LOCAL' tx
 	private EntityManagerFactory emf;
 	
-    public AccountManagerServiceImpl(){
-    	
-    }
-   
-    private BankAccount findByAcctNum(long acctNum) {
-    		logger.info("finding by AcctNum "+ acctNum);
-		
-    		emf = Persistence.createEntityManagerFactory("restapi_PU");
+	EntityManager em;
+	
+    private BankAccount findByAcctNum(long acctNum) throws Exception {
+    		logger.info(" finding by AcctNum "+ acctNum);
     		em = emf.createEntityManager();
 		TypedQuery<BankAccount> query = em.createNamedQuery("BankAccount.findByAcctNum", BankAccount.class);
 		return query.setParameter("acctNumber", acctNum).getSingleResult();
     }
     
-    public List<BankAccount> getAll() {
+    public List<BankAccount> getAll() throws Exception {
+    		logger.info(" getAll");
     		emf = Persistence.createEntityManagerFactory("restapi_PU");
     		em = emf.createEntityManager();
         return em.createNamedQuery("BankAccount.findAll", BankAccount.class).getResultList();
     }
 
-	public BankAccount deposit(BankAccount to, double amount) throws AccountMovementException {
-		logger.info("depositing the amount of "+ amount + " from banking account :"+to);
-		emf = Persistence.createEntityManagerFactory("restapi_PU");
+	public BankAccount deposit(BankAccount to, double amount) throws Exception {
+		logger.info(" depositing the amount of "+ amount + " from banking account :"+to);
 		em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
+
 		if (amount < 0) {
-			logger.error("Error: Deposit amount is invalid.");
-            throw new AccountMovementException("Error: Withdraw amount is invalid. It could never be deposited",String.valueOf(to.getAcctNumber()));         
+			logger.error(" Error: Deposit amount is invalid.");
+            throw new AccountMovementException(" Error: Withdraw amount is invalid. It could never be deposited",String.valueOf(to.getAcctNumber()));         
         }else {
         		BankAccount account = null;
         		try {
         			tx.begin();
-        			account = em.find(BankAccount.class, findByAcctNum(to.getAcctNumber()));
+        			account = em.find(BankAccount.class, findByAcctNum(to.getAcctNumber()).getId());
         			if(account==null) {
     					throw new AccountMovementException("Error: Account number is invalid. Operation denied ",String.valueOf(to.getAcctNumber()));             
     				}
@@ -84,28 +78,29 @@ public class AccountManagerServiceImpl implements AccountManagerService {
         }
 	}
 
-	public BankAccount withdraw(BankAccount from, double amount, double fee) throws AccountMovementException {
-		logger.info("withdrawing the amount of "+ amount + "(fee="+fee+") from banking account :"+ from);
-		emf = Persistence.createEntityManagerFactory("restapi_PU");
+	public BankAccount withdraw(BankAccount from, double amount, double fee) throws Exception {
+		logger.info(" withdrawing the amount of "+ amount + "(fee="+fee+") from banking account :"+ from);
 		em = emf.createEntityManager();
+		EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         
 		amount += fee;
         if (amount < 0) {
-        		logger.error("Error: Withdraw amount is invalid. It could never be deposited on acctNum="+from.getAcctNumber());
+        		logger.error(" Error: Withdraw amount is invalid. It could never be deposited on acctNum="+from.getAcctNumber());
         		throw new AccountMovementException("Error: Withdraw amount is invalid. It could never be deposited",String.valueOf(from.getAcctNumber()));      
         }else if (amount > from.getBalance()) {
-        		logger.error("Error: Deposit amount is invalid on acctNum="+from.getAcctNumber());
-        		throw new AccountMovementException("Error: Insufficient funds", String.valueOf(from.getAcctNumber()));     
+        		logger.error(" Error: Deposit amount is invalid on acctNum="+from.getAcctNumber());
+        		throw new AccountMovementException(" Error: Insufficient funds", String.valueOf(from.getAcctNumber()));     
         }else {
         		BankAccount account = null;
         		try {
         			tx.begin();
     				account = em.find(BankAccount.class, findByAcctNum(from.getAcctNumber()).getId());
     				if(account==null) {
-    					throw new AccountMovementException("Error: Account number is invalid. Operation denied ",String.valueOf(from.getAcctNumber()));             
+    					throw new AccountMovementException(Thread.currentThread()+", Error: Account number is invalid. Operation denied ",String.valueOf(from.getAcctNumber()));             
     				}
-				account.setBalance((account.getBalance())-amount); 
+    			
+    				account.setBalance(account.getBalance()-amount);
 				em.merge(account); 
     				tx.commit();
     				
@@ -120,26 +115,32 @@ public class AccountManagerServiceImpl implements AccountManagerService {
         	        }
         		}
         		
-        		return from;
+        		return account;
         }
 	}
 	
-	public TransferOutcome transfer(MoneyTransfer transfer) throws AccountMovementException{
-		logger.info("trasfering amount : " + transfer);
-		/*EntityManagerFactory*/ emf = Persistence.createEntityManagerFactory("restapi_PU");
-		/*EntityManager*/ em = emf.createEntityManager();
+	public TransferOutcome transfer(MoneyTransfer transfer) throws Exception{
+		logger.info(" trasfering amount : " + transfer);
+		em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         
-		BankAccount senderAccount = em.find(BankAccount.class, findByAcctNum(Long.parseLong(transfer.getSenderAccountNumber())).getId());			
+		BankAccount senderAccount = null;
+		try {
+			senderAccount = em.find(BankAccount.class, findByAcctNum(Long.parseLong(transfer.getSenderAccountNumber())).getId());
+		} catch (NumberFormatException e1) {
+			e1.printStackTrace();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}			
 		if(senderAccount==null) {
-			 throw new AccountMovementException("Error: Sender Account number is invalid. Operation denied ",transfer.getSenderAccountNumber());             
+			 throw new AccountMovementException(" Error: Sender Account number is invalid. Operation denied ",transfer.getSenderAccountNumber());             
 		}
 		
 		if (transfer.getAmount() < 0) 
-		{   logger.error("Error: Deposit amount is invalid.");
-            throw new AccountMovementException("Error: Transfer amount is invalid. Operation denied ",transfer.getSenderAccountNumber());      
+		{   logger.error(" Error: Deposit amount is invalid.");
+            throw new AccountMovementException(" Error: Transfer amount is invalid. Operation denied ",transfer.getSenderAccountNumber());      
         }else if (transfer.getAmount() > senderAccount.getBalance()) {
-          	throw new AccountMovementException("Error: Insufficient funds for Sender account ", transfer.getSenderAccountNumber());     
+          	throw new AccountMovementException(" Error: Insufficient funds for Sender account ", transfer.getSenderAccountNumber());     
         }
 		
 		BankAccount receiverAccount = null;
@@ -147,14 +148,14 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 			tx.begin();
 			receiverAccount = em.find(BankAccount.class, findByAcctNum(Long.parseLong(transfer.getReceiverAccountNumber())).getId());			
 			if(receiverAccount==null) {
-				 throw new AccountMovementException("Error: Receiver Account number is invalid. Operation denied ",transfer.getReceiverAccountNumber());             
+				 throw new AccountMovementException(Thread.currentThread()+", Error: Receiver Account number is invalid. Operation denied ",transfer.getReceiverAccountNumber());             
 			}
 			if (transfer.getAmount() < 0) 
 			{
-				logger.error("Error: Deposit amount is invalid.");
-	            throw new AccountMovementException("Error: Transfer amount is invalid. Operation denied ",transfer.getSenderAccountNumber());      
+				logger.error(" Error: Deposit amount is invalid.");
+	            throw new AccountMovementException(Thread.currentThread()+", Error: Transfer amount is invalid. Operation denied ",transfer.getSenderAccountNumber());      
 	        }else if (transfer.getAmount() > senderAccount.getBalance()) {
-	          	throw new AccountMovementException("Error: Insufficient funds for Sender account ", transfer.getSenderAccountNumber());     
+	          	throw new AccountMovementException(Thread.currentThread()+", Error: Insufficient funds for Sender account ", transfer.getSenderAccountNumber());     
 	        }
 			double transfAmount = transfer.getAmount() + transfer.getFee(); 
 			senderAccount.setBalance((senderAccount.getBalance())-transfAmount);
@@ -180,9 +181,8 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 	}
 
 	public BankAccount create(BankAccount account) throws Exception {
-		logger.info("creating banking account: "+account);
-		/*EntityManagerFactory*/ emf = Persistence.createEntityManagerFactory("restapi_PU");
-		/*EntityManager*/ em = emf.createEntityManager();
+		logger.info(" creating banking account: "+account);
+		em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
 		try{
 			tx.begin();
@@ -192,7 +192,6 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 			if (tx != null && tx.isActive()) {
 	            tx.rollback();
 	        }
-//			logger.error("",e);
 			throw e;
 		} finally {
 			if(em != null && em.isOpen()) {
@@ -206,11 +205,13 @@ public class AccountManagerServiceImpl implements AccountManagerService {
     public AccountManagerServiceImpl(EntityManager entityManager) {
     		em = entityManager;
     }
+    
+    public AccountManagerServiceImpl(EntityManagerFactory entityManagerFactory) {
+		emf = entityManagerFactory;
+    }
 
-	@Override
 	public void removeByAcctNum(long acctNum) throws Exception {
-		logger.info("removing banking account: "+acctNum);
-		emf = Persistence.createEntityManagerFactory("restapi_PU");
+		logger.info(" removing banking account: "+acctNum);
 		em = emf.createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		BankAccount account = null;
@@ -219,8 +220,10 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 			account = em.find(BankAccount.class, findByAcctNum(acctNum).getId());	
 			//You can't remove the entity if it is not attached. 
 			if (!em.contains(account)) {
+				logger.debug(" Entity not attached! Re-attaching entity "+acctNum);
 				account = em.merge(account);//re-attach it using merge
 			}
+			logger.debug("Removing attached Entity ");
 			//remove if it is attached.
 			em.remove(account);
 			tx.commit();
@@ -228,7 +231,6 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 			if (tx != null && tx.isActive()) {
 	            tx.rollback();
 	        }
-//			logger.error("",e);
 			throw e;
 		} finally {
 			if(em != null && em.isOpen()) {
@@ -238,10 +240,8 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 		
 	}
 
-	@Override
 	public long removeAll() throws Exception {
-		logger.info("removing all banking accounts: ");
-		emf = Persistence.createEntityManagerFactory("restapi_PU");
+		logger.info(" removing all banking accounts: ");
 		em = emf.createEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		int deletedCount = 0;
@@ -254,7 +254,6 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 			if (tx != null && tx.isActive()) {
 	            tx.rollback();
 	        }
-//			logger.error("",e);
 			throw e;
 		} finally {
 			if(em != null && em.isOpen()) {
@@ -264,5 +263,9 @@ public class AccountManagerServiceImpl implements AccountManagerService {
 		return deletedCount;
 		
 	}
+	
+	public AccountManagerServiceImpl(){
+    	
+    }
 
 }

@@ -12,7 +12,7 @@ Create an approach by complying with the following requirements :
 4 - Produce an executable as standalone program, without a pre-installed container/server
 
 
-Technologies : TomEE (Tomcat), Java EE, JTA, JPA and JAX-RS. 
+Technologies : TomEE (Embedded Tomcat), Java EE, JTA, JPA and JAX-RS. 
 
 Open the command prompt/Terminal 
 to run the code clone the repository using below command -
@@ -25,13 +25,13 @@ to run the code clone the repository using below command -
 ## 2. run only unit tests with Maven  
 	mvn test
 
-## 3. run application + test with Maven
+## 3. run application + test with Maven by using embedded Tomcat 
 To run the application enter the following command in the project directory
 
 	mvn package tomee:run
 
 
-# Resource Endpoints 
+# Resource Endpoints for testing REST API with client
 Open the command prompt/Terminal and type the following commands according to the
 CRUD to be performed or use a rest client. 
 

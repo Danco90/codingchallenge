@@ -24,6 +24,7 @@ public class TransferMapper {
 	
 	private static AccountConversionBean mapToAccountConversionBean(BankAccount in) {
 		AccountConversionBean out = new AccountConversionBean();
+		out.setId(in.getId());
 		out.setOwnerName(in.getOwnerName());
 		out.setAcctNumber(in.getAcctNumber());
 		out.setBalance(in.getBalance());
@@ -48,32 +49,6 @@ public class TransferMapper {
 		return out;
 	}
 	
-//	public static DebitAmount mapToDebitAmount(AccountDAO input, double amount) {
-//		
-//		DebitAmount out = new DebitAmount();
-//		out.setSenderName(input.getOwnerName());
-//		out.setSenderAcctNum(input.getAcctNumber());
-//		out.setAmount(amount);
-//		
-//		return out;
-//	}
-//	
-//	public CreditAmount mapToCreditAmount(AccountDAO input, double amount) {
-//		
-//		CreditAmount out = new CreditAmount();
-//		out.setSenderName(input.getOwnerName());
-//		out.setSenderAcctNum(input.getAcctNumber());
-//		out.setAmount(amount);
-//		
-//		return out;
-//	}
-	
-//	public AccountRevision mapToAccountRevision(double balance) {
-//		
-//		AccountRevision out = new AccountRevision();
-//		out.setBalance(balance);
-//		
-//		return out;
-//	}
+
 	
 }

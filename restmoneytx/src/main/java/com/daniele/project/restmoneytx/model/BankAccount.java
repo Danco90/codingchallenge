@@ -98,6 +98,18 @@ public class BankAccount implements Serializable{
 				+ balance + "]";
 	}
 	
+	@Override 
+	public boolean equals(Object obj) {
+		if (obj == this) { return true; } 
+		if (obj == null || obj.getClass() != this.getClass()) 
+		{ return false; } 
+		BankAccount guest = (BankAccount) obj; 
+		return id == guest.id && 
+		   (ownerName != null && ownerName.equals(guest.getOwnerName())) && 
+		   acctNumber == guest.acctNumber && 
+		   balance == guest.balance;  
+	}
+	
 	
 
 }

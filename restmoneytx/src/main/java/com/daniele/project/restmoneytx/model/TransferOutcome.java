@@ -3,7 +3,7 @@ package com.daniele.project.restmoneytx.model;
 /**
  * 
  * @author mdaniele
- * @update 12/18/2018
+ * @update 12/18/2019
  * @version 0.6.1
  */
 public class TransferOutcome {
@@ -61,6 +61,26 @@ public class TransferOutcome {
 		this.receiverAccount = receiverAccount;
 	}
 	
+	
+	
+	@Override
+	public String toString() {
+		return "TransferOutcome [amount=" + amount + ", fee=" + fee + ", senderAccount=" + senderAccount
+				+ ", receiverAccount=" + receiverAccount + "]";
+	}
+
+	@Override 
+	public boolean equals(Object obj) {
+		if (obj == this) { return true; } 
+		if (obj == null || obj.getClass() != this.getClass()) 
+		{ return false; } 
+		TransferOutcome guest = (TransferOutcome) obj; 
+		return 
+		   (senderAccount != null && senderAccount.equals(guest.getSenderAccount())) && 
+		   (receiverAccount != null && receiverAccount.equals(guest.getReceiverAccount())) && 
+		   amount == guest.amount &&
+		   fee == guest.fee;
+	}
 
 
 }

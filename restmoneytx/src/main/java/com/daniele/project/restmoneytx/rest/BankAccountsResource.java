@@ -20,9 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.apache.log4j.Logger;
 import com.daniele.project.restmoneytx.model.BankAccount;
 import com.daniele.project.restmoneytx.model.BankAccountCreation;
 import com.daniele.project.restmoneytx.model.MoneyTransfer;
@@ -36,33 +34,34 @@ import com.daniele.project.restmoneytx.service.AccountManagerService;
 @Path("bankAccounts")
 public class BankAccountsResource {
 	
-	private static final Logger logger = LoggerFactory.getLogger(BankAccountsResource.class);
+	private static org.apache.log4j.Logger logger 
+    = Logger.getLogger(BankAccountsResource.class);
 
 	@Inject
-	AccountManagerService service;
+	AccountManagerService service ;
 
+	public BankAccountsResource() {
+	}
+   
 	@GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAll() {
+    public Response getAll() throws Exception {
+		logger.info(" getAll start");
         List<BankAccount> bankAccounts = service.getAll();
+        logger.info(" done executing getAll");
         return Response.status(Status.OK)
                 .entity(new GenericEntity<List<BankAccount>>(bankAccounts) {
                 }).build();
     }
  
-    /**
-	 * 
-	 * @param account
-	 * @throws Exception 
-	 * @description POST '/newAcct' : create new account
-	 */
 	@POST
-	@Consumes("application/json")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createBankAccount(BankAccountCreation account) throws Exception{
-
+		logger.info(" createBankAccount start");
 		BankAccount entity = service.create(mapToDAO(account));
 		BankAccountCreation result = mapToResponse(entity);
+		logger.info(" done executing getAll :");
 		return Response
 			      .status(Response.Status.OK)
 			      .entity(result)
@@ -74,13 +73,15 @@ public class BankAccountsResource {
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
 	public Response deposit(@PathParam("amount") Double amount, BankAccount account) throws Exception{
+		logger.info(" deposit start");
 		BankAccount acct = service.deposit(account, amount);
 		if (null == acct) {
-			logger.error("No Account updated for ID "+account.getId() , Response.Status.NOT_FOUND);
+			logger.error(" No Account updated for ID "+account.getId() + ", " +Response.Status.NOT_FOUND);
 			return Response.status(Response.Status.NOT_FOUND)
 						.entity(acct)
 						.build();
 		}
+		logger.info(" done executing deposit :"+acct);
 		return Response.status(Response.Status.OK)
 			      .entity(acct)
 			      .build();
@@ -91,13 +92,16 @@ public class BankAccountsResource {
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
 	public Response withdraw(@PathParam("amount") Double amount,@PathParam("fee") double fee, BankAccount account) throws Exception{
+		logger.info(" withdraw start");
 		BankAccount acct = service.withdraw(account, amount, fee);
 		if (null == acct) {
-			logger.error("No Account updated for ID "+account.getId() , Response.Status.NOT_FOUND);
+			logger.error(" No Account updated for ID "+account.getId() + ", " +Response.Status.NOT_FOUND);
+			
 			return Response.status(Response.Status.NOT_FOUND)
 						.entity(acct)
 						.build();
 		}
+		logger.info(" done executing withdraw :"+acct);
 		return Response.status(Response.Status.OK)
 			      .entity(acct)
 			      .build();
@@ -108,13 +112,15 @@ public class BankAccountsResource {
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
 	public Response transfer(MoneyTransfer account) throws Exception{
+		logger.info(" transfer start");
 		TransferOutcome result = service.transfer(account);
 		if (null == result) {
-			logger.error("No Account updated for "+account, Response.Status.NOT_FOUND);
+			logger.error(" No Account updated for ID "+account + ", " +Response.Status.NOT_FOUND);
 			return Response.status(Response.Status.NOT_FOUND)
 						.entity(result)
 						.build();
 		}
+		logger.info(" done executing transfer :"+result);
 		return Response.status(Response.Status.OK)
 			      .entity(result)
 			      .build();
@@ -123,7 +129,9 @@ public class BankAccountsResource {
 	@DELETE
 	@Path( value = "/{acctNum}")	
 	public Response remove(@PathParam("acctNum") String acctNum) throws Exception{
+		logger.info(" remove");
 		service.removeByAcctNum(Long.parseLong(acctNum));
+		logger.info(" done executing remove ");
 		return Response.status(Response.Status.OK)
 			      .build();
 	}
@@ -132,11 +140,13 @@ public class BankAccountsResource {
 	@Path( value = "")	
     @Produces(MediaType.TEXT_PLAIN)
 	public Response removeAll() throws Exception{
+		logger.info(" removeAll start");
 		Long deletions = service.removeAll();
+		logger.info(" done executing removeAll : deleted "+deletions+" accounts");
+		
 		return Response.status(Response.Status.OK)
 				  .entity(deletions)
 			      .build();
 	}
-	
-	
+
 }

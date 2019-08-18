@@ -9,7 +9,7 @@ package com.daniele.project.restmoneytx.model;
 
 public class AccountConversionBean {
 
-	private Long id;
+	private long id;
 	private String ownerName;
 	private long acctNumber;
 	private double balance;
@@ -17,7 +17,7 @@ public class AccountConversionBean {
 	public AccountConversionBean() {
 	}
 	
-	public AccountConversionBean(Long id, String ownerName, long acctNumber, double balance) {
+	public AccountConversionBean(long id, String ownerName, long acctNumber, double balance) {
 		this(ownerName, acctNumber, balance);
 		this.id = id;
 	}
@@ -29,7 +29,7 @@ public class AccountConversionBean {
 	}
 
 	
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
@@ -55,6 +55,29 @@ public class AccountConversionBean {
 
 	public void setBalance(double balance) {
 		this.balance = balance;
+	}
+	
+	@Override
+	public String toString() {
+		return "AccountConversionBean [id=" + id + ", ownerName=" + ownerName + ", acctNumber=" + acctNumber
+				+ ", balance=" + balance + "]";
+	}
+	
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	@Override 
+	public boolean equals(Object obj) {
+		if (obj == this) { return true; } 
+		if (obj == null || obj.getClass() != this.getClass()) 
+		{ return false; } 
+		AccountConversionBean guest = (AccountConversionBean) obj; 
+		return id == guest.getId() && 
+		   (ownerName != null && ownerName.equals(guest.getOwnerName())) && 
+		   acctNumber == guest.getAcctNumber() && 
+		   balance == guest.getBalance();  
 	}
 
 }
